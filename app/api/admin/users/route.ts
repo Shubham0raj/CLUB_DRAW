@@ -54,6 +54,7 @@ export async function DELETE(req: NextRequest) {
     // Delete in correct order to respect FK constraints
     await prisma.winner.deleteMany({ where: { userId } });
     await prisma.entry.deleteMany({  where: { userId } });
+    await prisma.subscription.deleteMany({ where: { userId } });
     await prisma.score.deleteMany({  where: { userId } });
     await prisma.user.delete({       where: { id: userId } });
 
