@@ -36,7 +36,7 @@ export default function AdminDrawsPage() {
   const fetchDraws = async () => {
     try {
       setLoading(true);
-      const res  = await fetch("/api/auth/admin/draws", { headers: adminHeaders() });
+      const res  = await fetch("/api/admin/draws", { headers: adminHeaders() });
       const data = await res.json();
 
       if (!res.ok) {
