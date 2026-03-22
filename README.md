@@ -6,8 +6,8 @@ A full-stack subscription-based golf platform combining performance tracking, mo
 
 ## 🚀 Live Demo
 
-- **User Panel:** [your-vercel-url.vercel.app](https://your-vercel-url.vercel.app)
-- **Admin Panel:** [your-vercel-url.vercel.app/admin/login](https://your-vercel-url.vercel.app/admin/login)
+- **User Panel:** https://club-draw-ef8r.vercel.app
+- **Admin Panel:** https://club-draw-ef8r.vercel.app/admin/login
 
 ---
 
