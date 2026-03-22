@@ -12,13 +12,22 @@ export async function GET(req: NextRequest) {
   try {
     const winners = await prisma.winner.findMany({
       orderBy: { id: "desc" },
-      include: {
-        user: { select: { email: true } },
-        draw: { select: { month: true, numbers: true } },
-      },
     });
+    const winnersWithData = await Promise.all(
+  winners.map(async (w) => {
+    const user = await prisma.user.findUnique({
+      where:  { id: w.userId },
+      select: { email: true },
+    });
+    const draw = await prisma.draw.findUnique({
+      where:  { id: w.drawId },
+      select: { month: true, numbers: true },
+    });
+    return { ...w, user, draw };
+  })
+  );
 
-    return NextResponse.json({ winners }, { status: 200 });
+  return NextResponse.json({ winners }, { status: 200 });
 
   } catch (error) {
     console.error("[GET /api/admin/winners]", error);
