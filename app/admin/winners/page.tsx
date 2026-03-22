@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Winner = {
-  id:     string;
-  userId: string;
-  drawId: string;
-  match:  number;  
-  amount: number;
-  status: string;
-  user:   { email: string };
-  draw:   { month: string; numbers: number[] };
+  id:         string;
+  userId:     string;
+  drawId:     string;
+  matchCount: number;
+  amount:     number;
+  status:     string;
+  user:       { email: string };
+  draw:       { month: string; numbers: number[] };
 };
 
 export default function AdminWinnersPage() {
@@ -284,9 +284,9 @@ export default function AdminWinnersPage() {
                     </div>
                   </div>
 
-                  {/* Match count — fixed: w.match not w.matchCount */}
+                  {/* Match count */}
                   <div className="col-span-2 text-center">
-                    <span className="text-white font-bold text-sm">{w.match}</span>
+                    <span className="text-white font-bold text-sm">{w.matchCount}</span>
                     <span className="text-slate-500 text-xs"> / 5</span>
                   </div>
 
