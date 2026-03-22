@@ -18,7 +18,7 @@ export default function Home() {
 
   const [userId, setUserId]       = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const [userRole, setUserRole]   = useState("");   // ← tracks admin/user role
+  const [userRole, setUserRole]   = useState("");
   const [drawId, setDrawId]       = useState("");
   const [winners, setWinners]     = useState<any[]>([]);
   const [message, setMessage]     = useState("");
@@ -27,33 +27,23 @@ export default function Home() {
   const [isRunning, setIsRunning]     = useState(false);
   const [isEntering, setIsEntering]   = useState(false);
 
-  // ── Helper: get token ───────────────────────────────
   const getToken = () => localStorage.getItem("token");
 
-  // ── Helper: auth headers (always reads fresh token) ─
-  const authHeaders = () => {
-    const token = getToken();
-    return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
-  };
+  const authHeaders = () => ({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+  });
 
-  // ── Guard + decode userId from token on mount ───────
+  // ── Guard + decode token ────────────────────────────
   useEffect(() => {
     const token = getToken();
+    if (!token) { router.push("/login"); return; }
 
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    // Decode token to get userId, email and role
     const decoded = decodeToken(token);
     if (decoded) {
       setUserId(decoded.userId ?? "");
       setUserEmail(decoded.email ?? "");
-      setUserRole(decoded.role ?? "");   // ← set role from token
+      setUserRole(decoded.role ?? "");
     }
   }, []);
 
@@ -61,19 +51,13 @@ export default function Home() {
   useEffect(() => {
     const fetchCurrentDraw = async () => {
       try {
-        const res = await fetch("/api/draw/current", {
-          headers: authHeaders(),
-        });
+        const res  = await fetch("/api/draw/current", { headers: authHeaders() });
         const data = await res.json();
-
-        if (res.ok && data.draw) {
-          setDrawId(data.draw.id);
-        }
+        if (res.ok && data.draw) setDrawId(data.draw.id);
       } catch (err) {
         console.error("Failed to fetch current draw on mount:", err);
       }
     };
-
     if (getToken()) fetchCurrentDraw();
   }, []);
 
@@ -83,17 +67,16 @@ export default function Home() {
     router.push("/login");
   };
 
-  // ── Create Draw ─────────────────────────────────────
+  // ── Create Draw (admin only) ────────────────────────
   const createDraw = async () => {
     try {
       setIsCreating(true);
       setMessage("");
 
-      const res = await fetch("/api/draw/create", {
+      const res  = await fetch("/api/draw/create", {
         method: "POST",
         headers: authHeaders(),
       });
-
       const data = await res.json();
 
       if (!res.ok) {
@@ -102,9 +85,7 @@ export default function Home() {
         return;
       }
 
-      const currentRes = await fetch("/api/draw/current", {
-        headers: authHeaders(),
-      });
+      const currentRes  = await fetch("/api/draw/current", { headers: authHeaders() });
       const currentData = await currentRes.json();
 
       if (!currentRes.ok || !currentData.draw) {
@@ -133,20 +114,17 @@ export default function Home() {
       setIsEntering(true);
       setMessage("");
 
-      const currentRes = await fetch("/api/draw/current", {
-        headers: authHeaders(),
-      });
+      const currentRes  = await fetch("/api/draw/current", { headers: authHeaders() });
       const currentData = await currentRes.json();
 
       if (!currentRes.ok || !currentData.draw) {
         setMessageType("error");
-        setMessage("No active draw found. Please create a draw first.");
+        setMessage("No active draw found. Please check back later.");
         return;
       }
 
       const currentDrawId = currentData.draw.id;
       setDrawId(currentDrawId);
-
       router.push(`/enter?drawId=${currentDrawId}`);
 
     } catch (err) {
@@ -158,16 +136,14 @@ export default function Home() {
     }
   };
 
-  // ── Run Draw ────────────────────────────────────────
+  // ── Run Draw (admin only) ───────────────────────────
   const runDraw = async () => {
     try {
       setIsRunning(true);
       setMessage("");
       setWinners([]);
 
-      const currentRes = await fetch("/api/draw/current", {
-        headers: authHeaders(),
-      });
+      const currentRes  = await fetch("/api/draw/current", { headers: authHeaders() });
       const currentData = await currentRes.json();
 
       if (!currentRes.ok || !currentData.draw) {
@@ -179,12 +155,11 @@ export default function Home() {
       const currentDrawId = currentData.draw.id;
       setDrawId(currentDrawId);
 
-      const res = await fetch("/api/draw/run", {
+      const res  = await fetch("/api/draw/run", {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({ drawId: currentDrawId }),
       });
-
       const data = await res.json();
 
       if (!res.ok) {
@@ -209,7 +184,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-start justify-center px-4 py-12">
 
-      {/* Background orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600 rounded-full opacity-10 blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-600 rounded-full opacity-10 blur-3xl" />
@@ -229,7 +203,6 @@ export default function Home() {
                 <p className="text-slate-400 text-sm">Manage draws, scores, and competition entries</p>
               </div>
             </div>
-            {/* Logout */}
             <button
               onClick={handleLogout}
               className="text-xs text-slate-400 hover:text-rose-400 font-medium
@@ -240,7 +213,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* ── Logged-in user pill ── */}
           {userEmail && (
             <div className="mt-4 flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-indigo-500/20 border border-indigo-400/30
@@ -248,7 +220,6 @@ export default function Home() {
                 {userEmail.charAt(0).toUpperCase()}
               </div>
               <span className="text-slate-400 text-xs truncate">{userEmail}</span>
-              {/* Admin badge */}
               {userRole === "ADMIN" && (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-300 font-semibold">
                   ADMIN
@@ -264,22 +235,47 @@ export default function Home() {
             Actions
           </label>
 
-          {/* Create Draw */}
-          <button
-            onClick={createDraw}
-            disabled={isCreating}
-            className="w-full flex items-center justify-between px-5 py-3.5 rounded-xl
-                       bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700
-                       text-white font-semibold text-sm shadow-lg shadow-indigo-900/40
-                       transition-all duration-200 hover:scale-[1.02] hover:shadow-indigo-700/40
-                       disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 group"
-          >
-            <span className="flex items-center gap-2">
-              <span className="text-base">🎲</span>
-              {isCreating ? "Creating Draw…" : "Create Draw"}
-            </span>
-            <span className="text-indigo-300 group-hover:translate-x-0.5 transition-transform duration-150">→</span>
-          </button>
+          {/* ── ADMIN ONLY ── */}
+          {userRole === "ADMIN" && (
+            <>
+              {/* Create Draw */}
+              <button
+                onClick={createDraw}
+                disabled={isCreating}
+                className="w-full flex items-center justify-between px-5 py-3.5 rounded-xl
+                           bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700
+                           text-white font-semibold text-sm shadow-lg shadow-indigo-900/40
+                           transition-all duration-200 hover:scale-[1.02] hover:shadow-indigo-700/40
+                           disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 group"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="text-base">🎲</span>
+                  {isCreating ? "Creating Draw…" : "Create Draw"}
+                </span>
+                <span className="text-indigo-300 group-hover:translate-x-0.5 transition-transform duration-150">→</span>
+              </button>
+
+              {/* Run Draw */}
+              <button
+                onClick={runDraw}
+                disabled={isRunning}
+                className="w-full flex items-center justify-between px-5 py-3.5 rounded-xl
+                           bg-rose-600/20 hover:bg-rose-500/30 active:bg-rose-700/20
+                           border border-rose-500/30 hover:border-rose-400/50
+                           text-rose-300 font-semibold text-sm
+                           transition-all duration-200 hover:scale-[1.02] group
+                           disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="text-base">🏆</span>
+                  {isRunning ? "Running Draw…" : "Run Draw"}
+                </span>
+                <span className="text-rose-400 group-hover:translate-x-0.5 transition-transform duration-150">→</span>
+              </button>
+            </>
+          )}
+
+          {/* ── ALL USERS ── */}
 
           {/* Add Score */}
           <button
@@ -347,25 +343,23 @@ export default function Home() {
             <span className="text-emerald-400 group-hover:translate-x-0.5 transition-transform duration-150">→</span>
           </button>
 
-          {/* Run Draw */}
+          {/* View Results */}
           <button
-            onClick={runDraw}
-            disabled={isRunning}
+            onClick={() => router.push("/results")}
             className="w-full flex items-center justify-between px-5 py-3.5 rounded-xl
-                       bg-rose-600/20 hover:bg-rose-500/30 active:bg-rose-700/20
-                       border border-rose-500/30 hover:border-rose-400/50
-                       text-rose-300 font-semibold text-sm
-                       transition-all duration-200 hover:scale-[1.02] group
-                       disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                       bg-amber-500/15 hover:bg-amber-500/25
+                       border border-amber-500/25 hover:border-amber-500/40
+                       text-amber-300 font-semibold text-sm
+                       transition-all duration-200 hover:scale-[1.02] group"
           >
             <span className="flex items-center gap-2">
-              <span className="text-base">🏆</span>
-              {isRunning ? "Running Draw…" : "Run Draw"}
+              <span className="text-base">🏅</span>
+              View Results
             </span>
-            <span className="text-rose-400 group-hover:translate-x-0.5 transition-transform duration-150">→</span>
+            <span className="text-amber-400 group-hover:translate-x-0.5 transition-transform duration-150">→</span>
           </button>
 
-          {/* Admin Panel — only visible to ADMIN role users */}
+          {/* Admin Panel */}
           {userRole === "ADMIN" && (
             <button
               onClick={() => router.push("/admin/users")}
@@ -401,8 +395,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── WINNERS CARD ── */}
-        {winners.length > 0 && (
+        {/* ── WINNERS CARD (admin only) ── */}
+        {userRole === "ADMIN" && winners.length > 0 && (
           <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm px-8 py-6 shadow-xl space-y-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xl">🏆</span>
