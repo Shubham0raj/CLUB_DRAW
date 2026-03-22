@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { verifyToken, checkSubscription } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -19,6 +19,15 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = (decoded as any).userId;
+
+    // ── Check subscription ────────────────────────────
+    const hasSubscription = await checkSubscription(userId);
+    if (!hasSubscription) {
+      return NextResponse.json(
+        { error: "Active subscription required to enter the draw." },
+        { status: 403 }
+      );
+    }
 
     // ── Body ─────────────────────────────────────────────
     const { drawId } = await req.json();

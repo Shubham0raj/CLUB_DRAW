@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { verifyToken, checkSubscription } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -21,6 +21,15 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = (decoded as any).userId; // ← from token, not body
+
+    // ── Check subscription ────────────────────────────
+    const hasSubscription = await checkSubscription(userId);
+    if (!hasSubscription) {
+      return NextResponse.json(
+        { error: "Active subscription required to add scores." },
+        { status: 403 }
+      );
+    }
 
     // ── Body: only value and date ─────────────────────
     const { value, date } = await req.json();
