@@ -63,10 +63,10 @@ export async function DELETE(req: NextRequest) {
       { status: 200 }
     );
 
-  } catch (error) {
+  } catch (error :any) {
     console.error("[DELETE /api/admin/users]", error);
     return NextResponse.json(
-      { error: "Internal server error." },
+      { error: error.message ??"Internal server error." },
       { status: 500 }
     );
   }
