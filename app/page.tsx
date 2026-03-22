@@ -16,8 +16,9 @@ function decodeToken(token: string): any {
 export default function Home() {
   const router = useRouter();
 
-  const [userId, setUserId]       = useState("");        // ← decoded from token
-  const [userEmail, setUserEmail] = useState("");        // ← decoded from token
+  const [userId, setUserId]       = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [userRole, setUserRole]   = useState("");   // ← tracks admin/user role
   const [drawId, setDrawId]       = useState("");
   const [winners, setWinners]     = useState<any[]>([]);
   const [message, setMessage]     = useState("");
@@ -47,11 +48,12 @@ export default function Home() {
       return;
     }
 
-    // Decode token to get userId and email for display
+    // Decode token to get userId, email and role
     const decoded = decodeToken(token);
     if (decoded) {
       setUserId(decoded.userId ?? "");
       setUserEmail(decoded.email ?? "");
+      setUserRole(decoded.role ?? "");   // ← set role from token
     }
   }, []);
 
@@ -205,7 +207,6 @@ export default function Home() {
   };
 
   return (
-
     <div className="min-h-screen bg-linear-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-start justify-center px-4 py-12">
 
       {/* Background orbs */}
@@ -247,6 +248,12 @@ export default function Home() {
                 {userEmail.charAt(0).toUpperCase()}
               </div>
               <span className="text-slate-400 text-xs truncate">{userEmail}</span>
+              {/* Admin badge */}
+              {userRole === "ADMIN" && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-300 font-semibold">
+                  ADMIN
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -290,6 +297,7 @@ export default function Home() {
             <span className="text-slate-400 group-hover:translate-x-0.5 transition-transform duration-150">→</span>
           </button>
 
+          {/* Manage Subscription */}
           <button
             onClick={() => router.push("/pricing")}
             className="w-full flex items-center justify-between px-5 py-3.5 rounded-xl
@@ -356,6 +364,24 @@ export default function Home() {
             </span>
             <span className="text-rose-400 group-hover:translate-x-0.5 transition-transform duration-150">→</span>
           </button>
+
+          {/* Admin Panel — only visible to ADMIN role users */}
+          {userRole === "ADMIN" && (
+            <button
+              onClick={() => router.push("/admin/users")}
+              className="w-full flex items-center justify-between px-5 py-3.5 rounded-xl
+                         bg-rose-600/20 hover:bg-rose-500/30 active:bg-rose-700/20
+                         border border-rose-500/30 hover:border-rose-400/50
+                         text-rose-300 font-semibold text-sm
+                         transition-all duration-200 hover:scale-[1.02] group"
+            >
+              <span className="flex items-center gap-2">
+                <span className="text-base">🛡️</span>
+                Admin Panel
+              </span>
+              <span className="text-rose-400 group-hover:translate-x-0.5 transition-transform duration-150">→</span>
+            </button>
+          )}
         </div>
 
         {/* ── INLINE MESSAGE ── */}
@@ -400,7 +426,7 @@ export default function Home() {
                       {i + 1}
                     </div>
                     <div>
-                      <p className="text-white font-semibold text-sm truncate max-w-35">
+                      <p className="text-white font-semibold text-sm truncate max-w-[140px]">
                         {w.userId}
                       </p>
                       <p className="text-slate-400 text-xs mt-0.5">
