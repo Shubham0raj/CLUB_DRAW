@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Winner = {
-  id:         string;
-  userId:     string;
-  drawId:     string;
-  matchCount: number;
-  amount:     number;
-  status:     string;
-  user:       { email: string };
-  draw:       { month: string; numbers: number[] };
+  id:     string;
+  userId: string;
+  drawId: string;
+  match:  number;
+  amount: number;
+  status: string;
+  user:   { email: string } | null;   // ← nullable
+  draw:   { month: string; numbers: number[] } | null;  // ← nullable
 };
 
 export default function AdminWinnersPage() {
@@ -265,20 +265,24 @@ export default function AdminWinnersPage() {
                   key={w.id}
                   className="px-8 py-4 grid grid-cols-12 gap-4 items-center hover:bg-white/3 transition-colors duration-150"
                 >
-                  {/* Player */}
+                  {/* Player — safe access with ?. */}
                   <div className="col-span-3 flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-indigo-500/20 border border-indigo-400/30
                                     flex items-center justify-center text-xs font-bold text-indigo-300 shrink-0">
-                      {w.user.email.charAt(0).toUpperCase()}
+                      {w.user?.email?.charAt(0).toUpperCase() ?? "?"}
                     </div>
-                    <span className="text-white text-sm font-medium truncate">{w.user.email}</span>
+                    <span className="text-white text-sm font-medium truncate">
+                      {w.user?.email ?? "Unknown"}
+                    </span>
                   </div>
 
-                  {/* Draw month */}
+                  {/* Draw month — safe access with ?. */}
                   <div className="col-span-2">
-                    <p className="text-white text-sm font-medium">{w.draw.month}</p>
+                    <p className="text-white text-sm font-medium">
+                      {w.draw?.month ?? "Unknown"}
+                    </p>
                     <div className="flex gap-1 mt-1">
-                      {w.draw.numbers.map((n, i) => (
+                      {(w.draw?.numbers ?? []).map((n, i) => (
                         <span key={i} className="text-xs text-slate-400">{n}{i < 4 ? "," : ""}</span>
                       ))}
                     </div>
@@ -286,7 +290,7 @@ export default function AdminWinnersPage() {
 
                   {/* Match count */}
                   <div className="col-span-2 text-center">
-                    <span className="text-white font-bold text-sm">{w.matchCount}</span>
+                    <span className="text-white font-bold text-sm">{w.match}</span>
                     <span className="text-slate-500 text-xs"> / 5</span>
                   </div>
 
