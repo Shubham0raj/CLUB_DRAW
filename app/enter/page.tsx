@@ -1,13 +1,14 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function EnterPage() {
+// ── All logic moved into EnterContent ─────────────────
+function EnterContent() {
   const params = useSearchParams();
   const router = useRouter();
 
-  // ── userId removed — comes from token now ──────────
   const drawId = params.get("drawId");
 
   const [loading, setLoading] = useState(false);
@@ -19,7 +20,6 @@ export default function EnterPage() {
   const handleEnter = async () => {
     const token = getToken();
 
-    // ── Redirect if no token ────────────────────────
     if (!token) {
       router.push("/login");
       return;
@@ -39,9 +39,9 @@ export default function EnterPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,  // ── token replaces userId
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ drawId }),     // ── only drawId in body
+        body: JSON.stringify({ drawId }),
       });
 
       const data = await res.json();
@@ -55,7 +55,6 @@ export default function EnterPage() {
       setMessageType("success");
       setMessage("Successfully entered the draw!");
 
-      // go back to home
       setTimeout(() => router.push("/"), 1200);
     } catch (err) {
       console.error(err);
@@ -105,7 +104,6 @@ export default function EnterPage() {
             Entry Details
           </p>
 
-          {/* Draw ID row — player row removed since userId no longer in URL */}
           <div className="flex items-center justify-between py-3">
             <span className="text-slate-400 text-sm font-medium">Draw ID</span>
             <span className="text-white font-mono text-xs bg-white/8 border border-white/10 px-3 py-1.5 rounded-lg truncate max-w-50">
@@ -128,7 +126,6 @@ export default function EnterPage() {
 
         {/* ── ACTION BUTTONS ── */}
         <div className="space-y-3">
-          {/* Confirm Entry */}
           <button
             onClick={handleEnter}
             disabled={loading || messageType === "success" && !!message}
@@ -148,7 +145,6 @@ export default function EnterPage() {
             )}
           </button>
 
-          {/* Back */}
           <button
             onClick={() => router.push("/")}
             className="w-full flex items-center justify-between px-5 py-3.5 rounded-xl
@@ -198,5 +194,18 @@ export default function EnterPage() {
         .bg-indigo-500\/8 { background-color: rgb(99 102 241 / 0.08); }
       `}</style>
     </div>
+  );
+}
+
+// ── Suspense wrapper — THIS is the default export ─────
+export default function EnterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-linear-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-center justify-center">
+        <p className="text-slate-400 text-sm">Loading…</p>
+      </div>
+    }>
+      <EnterContent />
+    </Suspense>
   );
 }
