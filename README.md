@@ -124,7 +124,7 @@ GET              /api/admin/analytics
 
 **1. Clone the repository:**
 ```bash
-git clone https://github.com/yourusername/golf-draw-system.git
+git clone https://github.com/Shubham0raj/CLUB_DRAW.git
 cd golf-draw-system
 ```
 
